@@ -62,15 +62,7 @@ func Test_FiniteField_Add(t *testing.T) {
 		b *FiniteField
 	}
 
-	two := big.NewInt(2)
-	prime := big.NewInt(0).Exp(two, big.NewInt(256), nil)
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(32), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(9), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(8), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(7), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(6), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(4), nil))
-	prime.Sub(prime, big.NewInt(1))
+	prime := big.NewInt(223)
 
 	tests := []struct {
 		name string
@@ -134,15 +126,7 @@ func Test_FiniteField_Sub(t *testing.T) {
 		b *FiniteField
 	}
 
-	two := big.NewInt(2)
-	prime := big.NewInt(0).Exp(two, big.NewInt(256), nil)
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(32), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(9), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(8), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(7), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(6), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(4), nil))
-	prime.Sub(prime, big.NewInt(1))
+	prime := big.NewInt(223)
 
 	tests := []struct {
 		name string
@@ -182,15 +166,7 @@ func Test_FiniteField_Mul(t *testing.T) {
 		b *FiniteField
 	}
 
-	two := big.NewInt(2)
-	prime := big.NewInt(0).Exp(two, big.NewInt(256), nil)
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(32), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(9), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(8), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(7), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(6), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(4), nil))
-	prime.Sub(prime, big.NewInt(1))
+	prime := big.NewInt(223)
 
 	tests := []struct {
 		name string

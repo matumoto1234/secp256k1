@@ -11,18 +11,23 @@ import (
 	"github.com/matumoto1234/secp256k1/models"
 )
 
-func messageToFiniteField(message string, prime big.Int) *models.FiniteField {
+func toHash(message string, prime big.Int) *models.FiniteField {
 	hash := sha256.Sum256([]byte(message))
-	value := big.NewInt(0).SetBytes(hash[:])
+	value := new(big.Int).SetBytes(hash[:])
 	return models.NewFiniteField(value, prime)
 }
 
-func newRandomFiniteField(prime big.Int) *models.FiniteField {
-	n, err := rand.Int(rand.Reader, &prime)
-	if err != nil {
-		log.Fatal(err)
+// generate random number in [1, prime)
+func newRandomFiniteField(prime *big.Int) (*models.FiniteField, error) {
+	for {
+		n, err := rand.Int(rand.Reader, prime)
+		if err != nil {
+			return nil, err
+		}
+		if n.Sign() != 0 {
+			return models.NewFiniteField(n, *prime), nil
+		}
 	}
-	return models.NewFiniteField(n, prime)
 }
 
 func generateSecp256k1() elliptic.Curve {
@@ -56,14 +61,15 @@ func generateSecp256k1() elliptic.Curve {
 	)
 }
 
+// generateKey() : 秘密鍵privと公開鍵pubの鍵生成
+// n := 適切に選んだ定数(厳密な秘密鍵)
+// priv := 秘密鍵(有限体にしたもの)
+// G := 生成点
+// pub := k*G
 func generateKey(ec elliptic.Curve) (*models.FiniteField, *models.EllipticCurvePoint) {
-	// 鍵生成
-	fmt.Println("generate key...")
 	// 秘密鍵
 	n, _ := new(big.Int).SetString("83ecb3984a4f9ff03e84d5f9c0d7f888a81833643047acc58eb6431e01d9bac8", 16)
 	priv := models.NewFiniteField(n, *ec.Params().N)
-	fmt.Println("priv:", priv)
-	fmt.Println()
 
 	// 公開鍵
 	x, y := ec.ScalarBaseMult(priv.Value.Bytes())
@@ -77,80 +83,87 @@ type signature struct {
 	t *models.FiniteField
 }
 
-func sign(ec elliptic.Curve, msg string, priv *models.FiniteField) signature {
-	// sign
-	fmt.Println("sign...")
+// sign() : signature(r, t)なる署名を生成
+// G := 生成点
+// k := 一時的な秘密鍵(ランダム)
+// Q := 一時的な公開鍵(k*G)
+// priv := 秘密鍵
+// r := 公開鍵Qのx座標
+// z := メッセージのハッシュ
+// t := (z + s*r) / k を計算した値
+func sign(ec elliptic.Curve, msg string, priv *models.FiniteField) (signature, error) {
+	// temporary private key
+	k, err := newRandomFiniteField(ec.Params().N)
+	if err != nil {
+		return signature{}, err
+	}
 
-	// t = (h(m)+r*priv)/k
-	z := messageToFiniteField(msg, *ec.Params().N)
-	fmt.Println("z:", z)
-
-	k := newRandomFiniteField(*ec.Params().N)
-	fmt.Println("k:", k)
-
+	// temporary public key
 	x, y := ec.ScalarBaseMult(k.Value.Bytes())
-	Q := models.ToEllipticCurvePoint(x, y, ec.Params().P)
-	fmt.Println("Q:", Q)
+	Q := models.ToEllipticCurvePoint(x, y, ec.Params().N)
 
-	r := models.NewFiniteField(Q.X.Value, *ec.Params().N)
-	rs := new(models.FiniteField).Mul(r, priv)
-	t := new(models.FiniteField).Add(z, rs)
+	var sign signature
+	sign.r = Q.X
 
-	t.Div(t, k)
+	sign.t = new(models.FiniteField).Mul(sign.r, priv)
+	z := toHash(msg, *ec.Params().N)
+	sign.t.Add(sign.t, z)
+	sign.t.Div(sign.t, k)
 
-	sign := signature{}
-	sign.r = r
-	sign.t = t
-	fmt.Println("sign.r:", sign.r)
-	fmt.Println("sign.t:", sign.t)
-	return sign
+	return sign, nil
 }
 
+// verify() : signature(r, t)の署名検証
+// G := 生成点
+// z := メッセージのハッシュ
+// pub := 公開鍵
+// R := (z*G + r*pub) / t
+//
+//	Rのx座標 == r -> OK
+//	Rのx座標 != r -> NG(R == 無限遠点の場合もNG)
 func verify(ec elliptic.Curve, msg string, sign signature, pub *models.EllipticCurvePoint) bool {
-	// verify
-	fmt.Println()
-	fmt.Println("verify...")
-	fmt.Println()
-
-	z := messageToFiniteField(msg, *ec.Params().N)
+	// 計算量改善のための式変形
+	// R = (z*G + r*pub)/t
+	// w := 1/tとして、
+	// R = (z*G + r*pub) * w
+	// R = ((z*w)*G + (r*w)*pub)を求める
 
 	// w = 1 / t
-	w := new(models.FiniteField).Div(models.NewFiniteField(big.NewInt(1), *ec.Params().N), sign.t)
+	one := models.NewFiniteField(big.NewInt(1), *ec.Params().N)
+	w := new(models.FiniteField).Div(one, sign.t)
 
-	u1 := new(models.FiniteField).Mul(z, w)
+	z := toHash(msg, *ec.Params().N)
+	zw := new(models.FiniteField).Mul(z, w)
 
-	fmt.Println("z:", z)
-	fmt.Println("w:", w)
-	u2 := new(models.FiniteField).Mul(sign.r, w)
+	x, y := ec.ScalarBaseMult(zw.Value.Bytes())
+	zwG := models.ToEllipticCurvePoint(x, y, ec.Params().P)
 
-	x, y := ec.ScalarBaseMult(u1.Value.Bytes())
-	Pu1 := models.ToEllipticCurvePoint(x, y, ec.Params().P)
-	x, y = ec.ScalarMult(pub.X.Value, pub.Y.Value, u2.Value.Bytes())
-	Su2 := models.ToEllipticCurvePoint(x, y, ec.Params().P)
-	fmt.Println("u1:", u1)
-	fmt.Println("u2:", u2)
-	fmt.Println("Pu1:", Pu1)
-	fmt.Println("Su2:", Su2)
+	rw := new(models.FiniteField).Mul(sign.r, w)
 
-	x, y = ec.Add(Pu1.X.Value, Pu1.Y.Value, Su2.X.Value, Su2.Y.Value)
-	Q := models.ToEllipticCurvePoint(x, y, ec.Params().P)
-	fmt.Println()
-	if Q.IsZero {
-		fmt.Println("Q is zero")
+	x, y = ec.ScalarMult(pub.X.Value, pub.Y.Value, rw.Value.Bytes())
+	rwpub := models.ToEllipticCurvePoint(x, y, ec.Params().P)
+
+	x, y = ec.Add(zwG.X.Value, zwG.Y.Value, rwpub.X.Value, rwpub.Y.Value)
+	R := models.ToEllipticCurvePoint(x, y, ec.Params().P)
+
+	if R.IsZero {
 		return false
-	} else {
-		fmt.Println("r:", sign.r)
-		fmt.Println("x:", Q.X)
-		return sign.r.Equals(Q.X)
 	}
+
+	return sign.r.Equals(R.X)
 }
 
 func main() {
-	// ECDSAを行っている
+	// ECDSA
 	secp256k1 := generateSecp256k1()
 	priv, pub := generateKey(secp256k1)
 
 	msg := "hello"
-	signature := sign(secp256k1, msg, priv)
+
+	signature, err := sign(secp256k1, msg, priv)
+	if err != nil {
+		log.Fatal("sign:", err)
+	}
+
 	fmt.Println("verify:", verify(secp256k1, msg, signature, pub))
 }

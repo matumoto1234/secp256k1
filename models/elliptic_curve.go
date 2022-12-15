@@ -141,7 +141,7 @@ func (ec *EllipticCurve) AddP(p1, p2 *EllipticCurvePoint) *EllipticCurvePoint {
 	x2 := p2.X
 	y2 := p2.Y
 
-	L := NewFiniteField(big.NewInt(0), *ec.prime)
+	L := new(FiniteField)
 
 	if x1.Equals(x2) {
 		// P + (-P) = 0
