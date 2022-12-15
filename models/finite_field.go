@@ -52,7 +52,7 @@ func (f *FiniteField) Sub(x, y *FiniteField) *FiniteField {
 		f.Value.Sub(x.Value, y.Value)
 	}
 
-	f.Value.Mod(f.Value, f.Prime)
+	f.Value.Mod(f.Value, x.Prime)
 	f.Prime = x.Prime
 	return f
 }
@@ -94,7 +94,7 @@ func (f *FiniteField) Div(x, y *FiniteField) *FiniteField {
 }
 
 func (f FiniteField) String() string {
-	return "value:" + f.Value.String()
+	return f.Value.String()
 }
 
 func (f FiniteField) Equals(x *FiniteField) bool {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"reflect"
 
 	"github.com/matumoto1234/secp256k1/models"
 )
@@ -26,102 +25,124 @@ func newRandomFiniteField(prime big.Int) *models.FiniteField {
 }
 
 type Signature struct {
-	r models.FiniteField
-	t models.FiniteField
+	r *models.FiniteField
+	t *models.FiniteField
 }
 
-func main() {
-	// 鍵生成
-	fmt.Println("generate key...")
-
+func generateSecp256k1() *models.EllipticCurve {
+	// 素数
 	prime, _ := new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
 
+	// 楕円曲線のパラメータ
 	a := models.NewFiniteField(big.NewInt(0), *prime)
 	b := models.NewFiniteField(big.NewInt(7), *prime)
+
+	// 位数
 	order, _ := new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
 
-	secp256k1 := models.NewEllipticCurve(
+	// 生成点
+	gx, _ := new(big.Int).SetString("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
+	gy, _ := new(big.Int).SetString("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
+	G := models.NewEllipticCurvePoint(
+		models.NewFiniteField(gx, *prime),
+		models.NewFiniteField(gy, *prime),
+		false,
+	)
+
+	return models.NewEllipticCurve(
 		a,
 		b,
-		*order,
+		prime,
+		G,
+		256,
+		"secp256k1",
+		order,
 	)
+}
 
-	x, _ := new(big.Int).SetString("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
-	y, _ := new(big.Int).SetString("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
-
-	// 生成点G
-	G := models.NewEllipticCurvePoint(
-		models.NewFiniteField(x, *prime),
-		models.NewFiniteField(y, *prime),
-		false,
-		secp256k1,
-	)
-
+func generateKey(ec *models.EllipticCurve) (*models.FiniteField, *models.EllipticCurvePoint) {
+	// 鍵生成
+	fmt.Println("generate key...")
 	// 秘密鍵
 	n, _ := new(big.Int).SetString("83ecb3984a4f9ff03e84d5f9c0d7f888a81833643047acc58eb6431e01d9bac8", 16)
-	sec := models.NewFiniteField(n, *secp256k1.Order)
+	sec := models.NewFiniteField(n, *ec.Order)
 	fmt.Println("sec:", sec)
 	fmt.Println()
 
 	// 公開鍵
-	pub := new(models.EllipticCurvePoint).MulByScalar(G, sec, secp256k1)
+	pub := ec.ScalarBaseMult(sec.Value.Bytes())
 
+	return sec, pub
+}
+
+func sign(ec *models.EllipticCurve, msg string, sec *models.FiniteField) Signature {
 	// sign
 	fmt.Println("sign...")
 
 	// t = (h(m)+r*sec)/k
-	z := messageToFiniteField("hello", *secp256k1.Order)
+	z := messageToFiniteField(msg, *ec.Order)
 	fmt.Println("z:", z)
 
-	k := newRandomFiniteField(*secp256k1.Order)
+	k := newRandomFiniteField(*ec.Order)
 	fmt.Println("k:", k)
 
-	Q := new(models.EllipticCurvePoint).MulByScalar(G, k, secp256k1)
+	Q := ec.ScalarBaseMult(k.Value.Bytes())
 	fmt.Println("Q:", Q)
 
-	r := models.NewFiniteField(Q.X.Value, *secp256k1.Order)
+	r := models.NewFiniteField(Q.X.Value, *ec.Order)
 	rs := new(models.FiniteField).Mul(r, sec)
 	t := new(models.FiniteField).Add(z, rs)
 
 	t.Div(t, k)
 
 	sign := Signature{}
-	sign.r = *r
-	sign.t = *t
+	sign.r = r
+	sign.t = t
 	fmt.Println("sign.r:", sign.r)
 	fmt.Println("sign.t:", sign.t)
+	return sign
+}
 
+func verify(ec *models.EllipticCurve, msg string, sign Signature, pub *models.EllipticCurvePoint) bool {
 	// verify
 	fmt.Println()
 	fmt.Println("verify...")
 	fmt.Println()
 
-	z = messageToFiniteField("hello", *secp256k1.Order)
+	z := messageToFiniteField(msg, *ec.Order)
 
 	// w = 1 / t
-	w := new(models.FiniteField).Div(models.NewFiniteField(big.NewInt(1), *secp256k1.Order), &sign.t)
+	w := new(models.FiniteField).Div(models.NewFiniteField(big.NewInt(1), *ec.Order), sign.t)
 
 	u1 := new(models.FiniteField).Mul(z, w)
 
 	fmt.Println("z:", z)
 	fmt.Println("w:", w)
-	u2 := new(models.FiniteField).Mul(&sign.r, w)
-	Pu1 := new(models.EllipticCurvePoint).MulByScalar(G, u1, secp256k1)
-	Su2 := new(models.EllipticCurvePoint).MulByScalar(pub, u2, secp256k1)
+	u2 := new(models.FiniteField).Mul(sign.r, w)
+	Pu1 := ec.ScalarBaseMult(u1.Value.Bytes())
+	Su2 := ec.ScalarMult(pub, u2.Value.Bytes())
 	fmt.Println("u1:", u1)
 	fmt.Println("u2:", u2)
 	fmt.Println("Pu1:", Pu1)
 	fmt.Println("Su2:", Su2)
 
-	fmt.Println(reflect.DeepEqual(Pu1, Su2))
-
-	Q = new(models.EllipticCurvePoint).Add(Pu1, Su2, secp256k1)
+	Q := ec.Add(Pu1, Su2)
 	fmt.Println()
 	if Q.IsZero {
 		fmt.Println("Q is zero")
+		return false
 	} else {
 		fmt.Println("r:", sign.r)
 		fmt.Println("x:", Q.X)
-		fmt.Println("verify:", sign.r.Equals(Q.X))
+		return sign.r.Equals(Q.X)
 	}
+}
+
+func main() {
+	secp256k1 := generateSecp256k1()
+	sec, pub := generateKey(secp256k1)
+
+	msg := "hello"
+	signature := sign(secp256k1, msg, sec)
+	fmt.Println("verify:", verify(secp256k1, msg, signature, pub))
 }

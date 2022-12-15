@@ -121,7 +121,7 @@ func Test_FiniteField_Add(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFiniteField(big.NewInt(0), *prime).Add(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
+			if got := new(FiniteField).Add(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
 				t.Errorf("%v : Add() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
@@ -169,7 +169,7 @@ func Test_FiniteField_Sub(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFiniteField(big.NewInt(0), *prime).Sub(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
+			if got := new(FiniteField).Sub(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
 				t.Errorf("%v : Sub() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
@@ -241,7 +241,7 @@ func Test_FiniteField_Mul(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFiniteField(big.NewInt(0), *prime).Mul(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
+			if got := new(FiniteField).Mul(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
 				t.Errorf("%v : Sub() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
@@ -299,7 +299,7 @@ func Test_FiniteField_Div(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFiniteField(big.NewInt(0), *prime).Div(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
+			if got := new(FiniteField).Div(tt.args.a, tt.args.b); !got.Equals(&tt.want) {
 				t.Errorf("%v : Sub() = %v, want %v", tt.name, got, tt.want)
 			}
 		})

@@ -1,8 +1,9 @@
 package models
 
 import (
-	"fmt"
+	"crypto/elliptic"
 	"math/big"
+	"math/bits"
 )
 
 type EllipticCurvePoint struct {
@@ -11,13 +12,7 @@ type EllipticCurvePoint struct {
 	IsZero bool
 }
 
-type EllipticCurve struct {
-	A     *FiniteField
-	B     *FiniteField
-	Order *big.Int // 位数
-}
-
-// DeepCopy() : ppの値を代入する
+// DeepCopy() : ppの値をpに代入する
 func (p *EllipticCurvePoint) DeepCopy(pp *EllipticCurvePoint) *EllipticCurvePoint {
 	var cloneX, cloneY FiniteField
 	if pp.X != nil {
@@ -43,88 +38,36 @@ func (p *EllipticCurvePoint) Equals(pp *EllipticCurvePoint) bool {
 	return p.X.Equals(pp.X) && p.Y.Equals(pp.Y)
 }
 
-// Add() : sets z to the sum x+y on ec and returns z
-func (z *EllipticCurvePoint) Add(x, y *EllipticCurvePoint, ec *EllipticCurve) *EllipticCurvePoint {
-	if x.IsZero {
-		z.DeepCopy(y)
-		return z
-	}
-	if y.IsZero {
-		z.DeepCopy(x)
-		return z
-	}
-
-	x1 := x.X
-	y1 := x.Y
-	x2 := y.X
-	y2 := y.Y
-
-	L := NewFiniteField(big.NewInt(0), *x1.Prime)
-
-	if x1.Equals(x2) {
-		// P + (-P) = 0
-		if y1.Equals(NewFiniteField(y2.Value, *y2.Prime).Neg(y2)) {
-			z.IsZero = true
-			return z
-		}
-
-		// L = (3 * x1^2 + a) / (2 * y1)
-		x1Square := NewFiniteField(big.NewInt(0), *x1.Prime).Mul(x1, x1)
-		L.Add(x1Square, x1Square)
-		L.Add(L, x1Square)
-		L.Add(L, ec.A)
-		L.Div(L, NewFiniteField(big.NewInt(0), *x1.Prime).Add(y1, y1))
-	} else {
-		// L = (y2 - y1) / (x2 - x1)
-		L.Sub(y2, y1)
-		L.Div(L, NewFiniteField(big.NewInt(0), *x1.Prime).Sub(x2, x1))
-	}
-
-	// x3 = L^2 - x1 - x2
-	x3 := NewFiniteField(big.NewInt(0), *x1.Prime).Mul(L, L)
-	x3.Sub(x3, x1)
-	x3.Sub(x3, x2)
-
-	// y3 = L * (x1 - x3) - y1
-	y3 := NewFiniteField(big.NewInt(0), *x1.Prime).Sub(x1, x3)
-	y3.Mul(y3, L)
-	y3.Sub(y3, y1)
-
-	z.X = x3
-	z.Y = y3
-	z.IsZero = false
-	return z
-}
-
-// MulByScalar() : sets z to the p*x on ec and returns z
-func (z *EllipticCurvePoint) MulByScalar(p *EllipticCurvePoint, x *FiniteField, ec *EllipticCurve) *EllipticCurvePoint {
-	// x == 0
-	if x.Value.Cmp(big.NewInt(0)) == 0 {
-		z.IsZero = true
-		return z
-	}
-
+func (p *EllipticCurvePoint) String() string {
 	if p.IsZero {
-		z.DeepCopy(p)
-		return z
+		return "(zero,zero)"
 	}
-
-	sum := new(EllipticCurvePoint)
-	sum.IsZero = true
-	for i := x.Value.BitLen() - 1; i >= 0; i-- {
-		sum.Add(sum, sum, ec)
-		if x.Value.Bit(i) == 1 {
-			sum.Add(sum, p, ec)
-		}
-	}
-
-	z.DeepCopy(sum)
-	z.IsZero = false
-	return z
+	return "(" + p.X.String() + "," + p.Y.String() + ")"
 }
 
-// IsValid : Whether it satisfies y^2 = x^3 + ax + b
-func (p *EllipticCurvePoint) isValid(ec *EllipticCurve) bool {
+type EllipticCurve struct {
+	A       *FiniteField
+	B       *FiniteField
+	Prime   *big.Int
+	G       *EllipticCurvePoint
+	BitSize int
+	Name    string
+	Order   *big.Int // 位数
+}
+
+func (ec *EllipticCurve) Params() *elliptic.CurveParams {
+	return &elliptic.CurveParams{
+		P:       ec.Prime,
+		N:       ec.Order,
+		B:       ec.B.Value,
+		Gx:      ec.G.X.Value,
+		Gy:      ec.G.Y.Value,
+		BitSize: ec.BitSize,
+		Name:    ec.Name,
+	}
+}
+
+func (ec *EllipticCurve) IsOnCurve(p *EllipticCurvePoint) bool {
 	if p.IsZero {
 		return true
 	}
@@ -145,31 +88,127 @@ func (p *EllipticCurvePoint) isValid(ec *EllipticCurve) bool {
 	return lhs.Equals(rhs)
 }
 
-func (p *EllipticCurvePoint) String() string {
-	if p.IsZero {
-		return "x:zero y:zero"
+func (ec *EllipticCurve) Add(p1, p2 *EllipticCurvePoint) *EllipticCurvePoint {
+	p3 := new(EllipticCurvePoint)
+
+	if p1.IsZero {
+		p3.DeepCopy(p2)
+		return p3
 	}
-	return "x:" + p.X.String() + " y:" + p.Y.String()
+	if p2.IsZero {
+		p3.DeepCopy(p1)
+		return p3
+	}
+
+	x1 := p1.X
+	y1 := p1.Y
+	x2 := p2.X
+	y2 := p2.Y
+
+	L := NewFiniteField(big.NewInt(0), *ec.Prime)
+
+	if x1.Equals(x2) {
+		// P + (-P) = 0
+		if y1.Equals(new(FiniteField).Neg(y2)) {
+			p3.IsZero = true
+			return p3
+		}
+
+		// L = (3 * x1^2 + a) / (2 * y1)
+		x1Square := new(FiniteField).Mul(x1, x1)
+		L.Add(x1Square, x1Square)
+		L.Add(L, x1Square)
+		L.Add(L, ec.A)
+		L.Div(L, new(FiniteField).Add(y1, y1))
+	} else {
+		// L = (y2 - y1) / (x2 - x1)
+		L.Sub(y2, y1)
+		L.Div(L, new(FiniteField).Sub(x2, x1))
+	}
+
+	// x3 = L^2 - x1 - x2
+	x3 := new(FiniteField).Mul(L, L)
+	x3.Sub(x3, x1)
+	x3.Sub(x3, x2)
+
+	// y3 = L * (x1 - x3) - y1
+	y3 := new(FiniteField).Sub(x1, x3)
+	y3.Mul(y3, L)
+	y3.Sub(y3, y1)
+
+	p3.X = x3
+	p3.Y = y3
+	p3.IsZero = false
+	return p3
 }
 
-func NewEllipticCurvePoint(x, y *FiniteField, isZero bool, ec *EllipticCurve) *EllipticCurvePoint {
-	ecp := &EllipticCurvePoint{
+func (ec *EllipticCurve) Double(p *EllipticCurvePoint) *EllipticCurvePoint {
+	return ec.Add(p, p)
+}
+
+// e.g. k = [10001000, 10001111] -> 0b1000100010001111
+func (ec *EllipticCurve) ScalarMult(p *EllipticCurvePoint, k []byte) *EllipticCurvePoint {
+	pk := new(EllipticCurvePoint)
+
+	if len(k) == 0 { // k == 0
+		pk.IsZero = true
+		return pk
+	}
+
+	if p.IsZero {
+		pk.DeepCopy(p)
+		return pk
+	}
+
+	// 繰り返し2乗法の応用
+	// P + P = 2P
+	// 2P + 2P = 4P
+	// 4P + 4P = 8P
+	// ... を用いて、k倍したP を Θ(log n) で求める
+	sum := NewEllipticCurvePoint(nil, nil, true)
+	for _, b := range k {
+		rb := bits.Reverse8(b)
+		for i := 0; i < 8; i++ {
+			sum = ec.Add(sum, sum)
+			if rb&byte(1) == 1 {
+				sum = ec.Add(sum, p)
+			}
+			rb >>= 1
+		}
+	}
+
+	pk.DeepCopy(sum)
+	pk.IsZero = false
+	return pk
+}
+
+func (ec *EllipticCurve) ScalarBaseMult(k []byte) *EllipticCurvePoint {
+	return ec.ScalarMult(ec.G, k)
+}
+
+func NewEllipticCurvePoint(x, y *FiniteField, isZero bool) *EllipticCurvePoint {
+	p := &EllipticCurvePoint{
 		X:      x,
 		Y:      y,
 		IsZero: isZero,
 	}
 
-	if !ecp.isValid(ec) {
-		panic(fmt.Sprintf("NewEllipticCurvePoint() : Invalid elliptic curve point : %v on elliptic curve : %v", ecp, ec))
-	}
-
-	return ecp
+	return p
 }
 
-func NewEllipticCurve(a, b *FiniteField, order big.Int) *EllipticCurve {
+// if !ec.IsOnCurve(p) {
+// 	panic(fmt.Sprintf("NewEllipticCurvePoint() : Invalid elliptic curve point : %v on elliptic curve : %v", p, ec))
+// }
+
+
+func NewEllipticCurve(a, b *FiniteField, prime *big.Int, G *EllipticCurvePoint, bitSize int, name string, order *big.Int) *EllipticCurve {
 	return &EllipticCurve{
 		A:     a,
 		B:     b,
-		Order: &order,
+		Prime: prime,
+		G: G,
+		BitSize: 0,
+		Name:    "",
+		Order:   order,
 	}
 }
