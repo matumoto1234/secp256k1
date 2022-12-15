@@ -1,5 +1,5 @@
 # secp256k1
 
-楕円曲線暗号とそれを使用したECDSAを実装しました。
+楕円曲線暗号とそれを使用した[ECDSA](https://ja.wikipedia.org/wiki/%E6%A5%95%E5%86%86%E6%9B%B2%E7%B7%9ADSA)をGoで実装しました。
 
-補足事項などは [Issues](https://github.com/matumoto1234/secp256k1/labels/documentation) にドキュメントとして追記していくかもしれません
+補足事項などは [Issues](https://github.com/matumoto1234/secp256k1/labels/documentation) にドキュメントとして追記していくかもしれません。
