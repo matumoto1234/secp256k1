@@ -14,8 +14,8 @@ func Test_EllipticCurve_Add(t *testing.T) {
 
 	prime := big.NewInt(223)
 
-	a := NewFiniteField(big.NewInt(0), *prime)
-	b := NewFiniteField(big.NewInt(7), *prime)
+	a := NewFiniteField(big.NewInt(0), prime)
+	b := NewFiniteField(big.NewInt(7), prime)
 
 	ec := NewEllipticCurve(
 		a,
@@ -36,13 +36,13 @@ func Test_EllipticCurve_Add(t *testing.T) {
 			name: "P + (-P) = 0",
 			args: args{
 				x: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(170), *prime),
-					NewFiniteField(big.NewInt(142), *prime),
+					NewFiniteField(big.NewInt(170), prime),
+					NewFiniteField(big.NewInt(142), prime),
 					false,
 				),
 				y: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(170), *prime),
-					NewFiniteField(big.NewInt(-142), *prime),
+					NewFiniteField(big.NewInt(170), prime),
+					NewFiniteField(big.NewInt(-142), prime),
 					false,
 				),
 			},
@@ -52,19 +52,19 @@ func Test_EllipticCurve_Add(t *testing.T) {
 			name: "(170, 142) + (60, 139) = (220, 181)",
 			args: args{
 				x: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(170), *big.NewInt(223)),
-					NewFiniteField(big.NewInt(142), *big.NewInt(223)),
+					NewFiniteField(big.NewInt(170), big.NewInt(223)),
+					NewFiniteField(big.NewInt(142), big.NewInt(223)),
 					false,
 				),
 				y: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(60), *big.NewInt(223)),
-					NewFiniteField(big.NewInt(139), *big.NewInt(223)),
+					NewFiniteField(big.NewInt(60), big.NewInt(223)),
+					NewFiniteField(big.NewInt(139), big.NewInt(223)),
 					false,
 				),
 			},
 			want: NewEllipticCurvePoint(
-				NewFiniteField(big.NewInt(220), *big.NewInt(223)),
-				NewFiniteField(big.NewInt(181), *big.NewInt(223)),
+				NewFiniteField(big.NewInt(220), big.NewInt(223)),
+				NewFiniteField(big.NewInt(181), big.NewInt(223)),
 				false,
 			),
 		},
@@ -72,19 +72,19 @@ func Test_EllipticCurve_Add(t *testing.T) {
 			name: "(192, 105) * (192, 105) = (49, 71)",
 			args: args{
 				x: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(192), *big.NewInt(223)),
-					NewFiniteField(big.NewInt(105), *big.NewInt(223)),
+					NewFiniteField(big.NewInt(192), big.NewInt(223)),
+					NewFiniteField(big.NewInt(105), big.NewInt(223)),
 					false,
 				),
 				y: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(192), *big.NewInt(223)),
-					NewFiniteField(big.NewInt(105), *big.NewInt(223)),
+					NewFiniteField(big.NewInt(192), big.NewInt(223)),
+					NewFiniteField(big.NewInt(105), big.NewInt(223)),
 					false,
 				),
 			},
 			want: NewEllipticCurvePoint(
-				NewFiniteField(big.NewInt(49), *big.NewInt(223)),
-				NewFiniteField(big.NewInt(71), *big.NewInt(223)),
+				NewFiniteField(big.NewInt(49), big.NewInt(223)),
+				NewFiniteField(big.NewInt(71), big.NewInt(223)),
 				false,
 			),
 		},
@@ -106,8 +106,8 @@ func Test_EllipticCurve_MulByScalar(t *testing.T) {
 
 	prime := big.NewInt(223)
 
-	a := NewFiniteField(big.NewInt(0), *prime)
-	b := NewFiniteField(big.NewInt(7), *prime)
+	a := NewFiniteField(big.NewInt(0), prime)
+	b := NewFiniteField(big.NewInt(7), prime)
 	ec := NewEllipticCurve(
 		a,
 		b,
@@ -127,15 +127,15 @@ func Test_EllipticCurve_MulByScalar(t *testing.T) {
 			name: "2 * (192, 105) = (49, 71)",
 			args: args{
 				p: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(192), *big.NewInt(223)),
-					NewFiniteField(big.NewInt(105), *big.NewInt(223)),
+					NewFiniteField(big.NewInt(192), big.NewInt(223)),
+					NewFiniteField(big.NewInt(105), big.NewInt(223)),
 					false,
 				),
-				x: NewFiniteField(big.NewInt(2), *big.NewInt(223)),
+				x: NewFiniteField(big.NewInt(2), big.NewInt(223)),
 			},
 			want: NewEllipticCurvePoint(
-				NewFiniteField(big.NewInt(49), *big.NewInt(223)),
-				NewFiniteField(big.NewInt(71), *big.NewInt(223)),
+				NewFiniteField(big.NewInt(49), big.NewInt(223)),
+				NewFiniteField(big.NewInt(71), big.NewInt(223)),
 				false,
 			),
 		},
@@ -143,15 +143,15 @@ func Test_EllipticCurve_MulByScalar(t *testing.T) {
 			name: "4 * (47, 71) = (194, 51)",
 			args: args{
 				p: NewEllipticCurvePoint(
-					NewFiniteField(big.NewInt(47), *big.NewInt(223)),
-					NewFiniteField(big.NewInt(71), *big.NewInt(223)),
+					NewFiniteField(big.NewInt(47), big.NewInt(223)),
+					NewFiniteField(big.NewInt(71), big.NewInt(223)),
 					false,
 				),
-				x: NewFiniteField(big.NewInt(4), *big.NewInt(223)),
+				x: NewFiniteField(big.NewInt(4), big.NewInt(223)),
 			},
 			want: NewEllipticCurvePoint(
-				NewFiniteField(big.NewInt(194), *big.NewInt(223)),
-				NewFiniteField(big.NewInt(51), *big.NewInt(223)),
+				NewFiniteField(big.NewInt(194), big.NewInt(223)),
+				NewFiniteField(big.NewInt(51), big.NewInt(223)),
 				false,
 			),
 		},

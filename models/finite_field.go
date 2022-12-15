@@ -102,9 +102,9 @@ func (f FiniteField) Equals(x *FiniteField) bool {
 }
 
 // NewFiniteField() : constructor of FiniteField
-func NewFiniteField(value *big.Int, prime big.Int) *FiniteField {
+func NewFiniteField(value *big.Int, prime *big.Int) *FiniteField {
 	return &FiniteField{
-		Value: new(big.Int).Mod(value, &prime),
-		Prime: &prime,
+		Value: new(big.Int).Mod(value, prime),
+		Prime: prime,
 	}
 }

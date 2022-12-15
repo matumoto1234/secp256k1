@@ -11,7 +11,7 @@ import (
 	"github.com/matumoto1234/secp256k1/models"
 )
 
-func toHash(message string, prime big.Int) *models.FiniteField {
+func toHash(message string, prime *big.Int) *models.FiniteField {
 	hash := sha256.Sum256([]byte(message))
 	value := new(big.Int).SetBytes(hash[:])
 	return models.NewFiniteField(value, prime)
@@ -25,7 +25,7 @@ func newRandomFiniteField(prime *big.Int) (*models.FiniteField, error) {
 			return nil, err
 		}
 		if n.Sign() != 0 {
-			return models.NewFiniteField(n, *prime), nil
+			return models.NewFiniteField(n, prime), nil
 		}
 	}
 }
@@ -35,8 +35,8 @@ func generateSecp256k1() elliptic.Curve {
 	prime, _ := new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
 
 	// 楕円曲線のパラメータ
-	a := models.NewFiniteField(big.NewInt(0), *prime)
-	b := models.NewFiniteField(big.NewInt(7), *prime)
+	a := models.NewFiniteField(big.NewInt(0), prime)
+	b := models.NewFiniteField(big.NewInt(7), prime)
 
 	// 位数
 	order, _ := new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
@@ -45,8 +45,8 @@ func generateSecp256k1() elliptic.Curve {
 	gx, _ := new(big.Int).SetString("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 16)
 	gy, _ := new(big.Int).SetString("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16)
 	G := models.NewEllipticCurvePoint(
-		models.NewFiniteField(gx, *prime),
-		models.NewFiniteField(gy, *prime),
+		models.NewFiniteField(gx, prime),
+		models.NewFiniteField(gy, prime),
 		false,
 	)
 
@@ -69,7 +69,7 @@ func generateSecp256k1() elliptic.Curve {
 func generateKey(ec elliptic.Curve) (*models.FiniteField, *models.EllipticCurvePoint) {
 	// 秘密鍵
 	n, _ := new(big.Int).SetString("83ecb3984a4f9ff03e84d5f9c0d7f888a81833643047acc58eb6431e01d9bac8", 16)
-	priv := models.NewFiniteField(n, *ec.Params().N)
+	priv := models.NewFiniteField(n, ec.Params().N)
 
 	// 公開鍵
 	x, y := ec.ScalarBaseMult(priv.Value.Bytes())
@@ -106,7 +106,7 @@ func sign(ec elliptic.Curve, msg string, priv *models.FiniteField) (signature, e
 	sign.r = Q.X
 
 	sign.t = new(models.FiniteField).Mul(sign.r, priv)
-	z := toHash(msg, *ec.Params().N)
+	z := toHash(msg, ec.Params().N)
 	sign.t.Add(sign.t, z)
 	sign.t.Div(sign.t, k)
 
@@ -129,10 +129,10 @@ func verify(ec elliptic.Curve, msg string, sign signature, pub *models.EllipticC
 	// R = ((z*w)*G + (r*w)*pub)を求める
 
 	// w = 1 / t
-	one := models.NewFiniteField(big.NewInt(1), *ec.Params().N)
+	one := models.NewFiniteField(big.NewInt(1), ec.Params().N)
 	w := new(models.FiniteField).Div(one, sign.t)
 
-	z := toHash(msg, *ec.Params().N)
+	z := toHash(msg, ec.Params().N)
 	zw := new(models.FiniteField).Mul(z, w)
 
 	x, y := ec.ScalarBaseMult(zw.Value.Bytes())

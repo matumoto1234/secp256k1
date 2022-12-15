@@ -52,8 +52,8 @@ func ToEllipticCurvePoint(x, y, prime *big.Int) *EllipticCurvePoint {
 	}
 
 	return NewEllipticCurvePoint(
-		NewFiniteField(x, *prime),
-		NewFiniteField(y, *prime),
+		NewFiniteField(x, prime),
+		NewFiniteField(y, prime),
 		false,
 	)
 }

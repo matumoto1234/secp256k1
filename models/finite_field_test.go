@@ -20,30 +20,30 @@ func Test_FiniteField_Neg(t *testing.T) {
 		{
 			name: "-(0) = 0",
 			arg: arg{
-				a: NewFiniteField(big.NewInt(0), *prime),
+				a: NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "-(1) = -1",
 			arg: arg{
-				a: NewFiniteField(big.NewInt(1), *prime),
+				a: NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(-1), *prime),
+			want: *NewFiniteField(big.NewInt(-1), prime),
 		},
 		{
 			name: "-(3) = -3",
 			arg: arg{
-				a: NewFiniteField(big.NewInt(3), *prime),
+				a: NewFiniteField(big.NewInt(3), prime),
 			},
-			want: *NewFiniteField(big.NewInt(-3), *prime),
+			want: *NewFiniteField(big.NewInt(-3), prime),
 		},
 		{
 			name: "-prime = 0",
 			arg: arg{
-				a: NewFiniteField(prime, *prime),
+				a: NewFiniteField(prime, prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 	}
 
@@ -72,42 +72,42 @@ func Test_FiniteField_Add(t *testing.T) {
 		{
 			name: "0 + 0 = 0",
 			args: args{
-				NewFiniteField(big.NewInt(0), *prime),
-				NewFiniteField(big.NewInt(0), *prime),
+				NewFiniteField(big.NewInt(0), prime),
+				NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "0 + 1 = 1",
 			args: args{
-				NewFiniteField(big.NewInt(0), *prime),
-				NewFiniteField(big.NewInt(1), *prime),
+				NewFiniteField(big.NewInt(0), prime),
+				NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(1), *prime),
+			want: *NewFiniteField(big.NewInt(1), prime),
 		},
 		{
 			name: "1 + 0 = 0",
 			args: args{
-				NewFiniteField(big.NewInt(1), *prime),
-				NewFiniteField(big.NewInt(0), *prime),
+				NewFiniteField(big.NewInt(1), prime),
+				NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(1), *prime),
+			want: *NewFiniteField(big.NewInt(1), prime),
 		},
 		{
 			name: "10 + 10 = 20",
 			args: args{
-				NewFiniteField(big.NewInt(10), *prime),
-				NewFiniteField(big.NewInt(10), *prime),
+				NewFiniteField(big.NewInt(10), prime),
+				NewFiniteField(big.NewInt(10), prime),
 			},
-			want: *NewFiniteField(big.NewInt(20), *prime),
+			want: *NewFiniteField(big.NewInt(20), prime),
 		},
 		{
 			name: "prime + 1 = 1",
 			args: args{
-				NewFiniteField(prime, *prime),
-				NewFiniteField(big.NewInt(1), *prime),
+				NewFiniteField(prime, prime),
+				NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(1), *prime),
+			want: *NewFiniteField(big.NewInt(1), prime),
 		},
 	}
 
@@ -136,18 +136,18 @@ func Test_FiniteField_Sub(t *testing.T) {
 		{
 			name: "0 - 0 = 0",
 			args: args{
-				a: NewFiniteField(big.NewInt(0), *prime),
-				b: NewFiniteField(big.NewInt(0), *prime),
+				a: NewFiniteField(big.NewInt(0), prime),
+				b: NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "1 - 0 = 1",
 			args: args{
-				a: NewFiniteField(big.NewInt(1), *prime),
-				b: NewFiniteField(big.NewInt(0), *prime),
+				a: NewFiniteField(big.NewInt(1), prime),
+				b: NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(1), *prime),
+			want: *NewFiniteField(big.NewInt(1), prime),
 		},
 	}
 
@@ -176,42 +176,42 @@ func Test_FiniteField_Mul(t *testing.T) {
 		{
 			name: "0 * 0 = 0",
 			args: args{
-				a: NewFiniteField(big.NewInt(0), *prime),
-				b: NewFiniteField(big.NewInt(0), *prime),
+				a: NewFiniteField(big.NewInt(0), prime),
+				b: NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "1 * 0 = 1",
 			args: args{
-				a: NewFiniteField(big.NewInt(1), *prime),
-				b: NewFiniteField(big.NewInt(0), *prime),
+				a: NewFiniteField(big.NewInt(1), prime),
+				b: NewFiniteField(big.NewInt(0), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "0 * 1 = 0",
 			args: args{
-				a: NewFiniteField(big.NewInt(0), *prime),
-				b: NewFiniteField(big.NewInt(1), *prime),
+				a: NewFiniteField(big.NewInt(0), prime),
+				b: NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "2 * 1 = 2",
 			args: args{
-				a: NewFiniteField(big.NewInt(2), *prime),
-				b: NewFiniteField(big.NewInt(1), *prime),
+				a: NewFiniteField(big.NewInt(2), prime),
+				b: NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(2), *prime),
+			want: *NewFiniteField(big.NewInt(2), prime),
 		},
 		{
 			name: "prime * 2 = 0",
 			args: args{
-				a: NewFiniteField(prime, *prime),
-				b: NewFiniteField(big.NewInt(2), *prime),
+				a: NewFiniteField(prime, prime),
+				b: NewFiniteField(big.NewInt(2), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 	}
 
@@ -250,26 +250,26 @@ func Test_FiniteField_Div(t *testing.T) {
 		{
 			name: "0 / 1 = 0",
 			args: args{
-				a: NewFiniteField(big.NewInt(0), *prime),
-				b: NewFiniteField(big.NewInt(1), *prime),
+				a: NewFiniteField(big.NewInt(0), prime),
+				b: NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(0), *prime),
+			want: *NewFiniteField(big.NewInt(0), prime),
 		},
 		{
 			name: "1 / 1 = 1",
 			args: args{
-				a: NewFiniteField(big.NewInt(1), *prime),
-				b: NewFiniteField(big.NewInt(1), *prime),
+				a: NewFiniteField(big.NewInt(1), prime),
+				b: NewFiniteField(big.NewInt(1), prime),
 			},
-			want: *NewFiniteField(big.NewInt(1), *prime),
+			want: *NewFiniteField(big.NewInt(1), prime),
 		},
 		{
 			name: "1 / 2 = 57896044618658097711785492504343953926634992332820282019728792003954417335832",
 			args: args{
-				a: NewFiniteField(big.NewInt(1), *prime),
-				b: NewFiniteField(big.NewInt(2), *prime),
+				a: NewFiniteField(big.NewInt(1), prime),
+				b: NewFiniteField(big.NewInt(2), prime),
 			},
-			want: *NewFiniteField(inv2, *prime),
+			want: *NewFiniteField(inv2, prime),
 		},
 	}
 
