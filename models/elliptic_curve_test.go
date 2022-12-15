@@ -28,9 +28,9 @@ func Test_EllipticCurve_Add(t *testing.T) {
 	)
 
 	tests := []struct {
-		name  string
-		args  args
-		want  *EllipticCurvePoint
+		name string
+		args args
+		want *EllipticCurvePoint
 	}{
 		{
 			name: "P + (-P) = 0",
@@ -46,7 +46,7 @@ func Test_EllipticCurve_Add(t *testing.T) {
 					false,
 				),
 			},
-			want:  NewEllipticCurvePoint(nil, nil, true),
+			want: NewEllipticCurvePoint(nil, nil, true),
 		},
 		{
 			name: "(170, 142) + (60, 139) = (220, 181)",
@@ -91,7 +91,7 @@ func Test_EllipticCurve_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ec.Add(tt.args.x, tt.args.y); !got.Equals(tt.want) {
+			if got := ec.AddP(tt.args.x, tt.args.y); !got.equals(tt.want) {
 				t.Errorf("%v : EllipticCurve.MulByScalar() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
@@ -119,9 +119,9 @@ func Test_EllipticCurve_MulByScalar(t *testing.T) {
 	)
 
 	tests := []struct {
-		name  string
-		args  args
-		want  *EllipticCurvePoint
+		name string
+		args args
+		want *EllipticCurvePoint
 	}{
 		{
 			name: "2 * (192, 105) = (49, 71)",
@@ -158,7 +158,7 @@ func Test_EllipticCurve_MulByScalar(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ec.ScalarMult(tt.args.p, tt.args.x.Value.Bytes()); !got.Equals(tt.want) {
+			if got := ec.ScalarMultP(tt.args.p, tt.args.x.Value.Bytes()); !got.equals(tt.want) {
 				t.Errorf("%v : EllipticCurve.MulByScalar() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
