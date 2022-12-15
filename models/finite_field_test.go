@@ -10,15 +10,7 @@ func Test_FiniteField_Neg(t *testing.T) {
 		a *FiniteField
 	}
 
-	two := big.NewInt(2)
-	prime := big.NewInt(0).Exp(two, big.NewInt(256), nil)
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(32), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(9), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(8), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(7), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(6), nil))
-	prime.Sub(prime, big.NewInt(0).Exp(two, big.NewInt(4), nil))
-	prime.Sub(prime, big.NewInt(1))
+	prime := big.NewInt(223)
 
 	tests := []struct {
 		name string
@@ -57,7 +49,7 @@ func Test_FiniteField_Neg(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewFiniteField(big.NewInt(0), *prime).Neg(tt.arg.a); !got.Equals(&tt.want) {
+			if got := new(FiniteField).Neg(tt.arg.a); !got.Equals(&tt.want) {
 				t.Errorf("%v : Add() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
