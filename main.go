@@ -165,5 +165,16 @@ func main() {
 		log.Fatal("sign:", err)
 	}
 
-	fmt.Println("verify:", verify(secp256k1, msg, signature, pub))
+	f := func(msg2 string) {
+		isValid := verify(secp256k1, msg2, signature, pub)
+		op := "!="
+		if isValid {
+			op = "=="
+		}
+		fmt.Printf("%v %v %v\n", msg, op, msg2)
+	}
+
+	f(msg)     // OK
+	f("hollo") // NG
+	f("here")  // NG
 }
